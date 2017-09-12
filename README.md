@@ -1,14 +1,14 @@
 # Cronometro
 Obligatorio de sistema operativao
 
-##Estructuras##
+##Estructuras
 	-Cargo dependencias
 	-Declaro variavles
 	-Declaro Funciones
 	-Ejecuto main
 	-Redacto Funciones
 
-##Seudo Codigo##
+##Seudo Codigo
 Inicialiso variavles
 	Trabajo int
 	array dir con directorios
@@ -17,7 +17,7 @@ Inicialiso variavles
 
 
 
-###Descripcion Hilo uno Oproceso hijo###
+###Descripcion Hilo uno Oproceso hijo
 	- Cronometraje
 		-recorrera lista y sumara uno a cada estado 1
 		-Minreas trabajo no sea 4 
@@ -74,16 +74,16 @@ Inicialiso variavles
 			-Salir
 				Trabajo 4
 
-##Funciones##
-###Ficheros###
+##Funciones
+###Ficheros
 	Actualisar ficheros
 	Eliminar fichero
 	Cargar fichero
-###Listas###
+###Listas
 	-Cargar de fichero 
 	-Guardar en fichero
 	-Eliminar de fichero
-###Imprecion###
+###Imprecion
 	-Reloj
 	-opciones inicio
 	-Nuevo reloj
