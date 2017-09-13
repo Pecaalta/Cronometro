@@ -1,3 +1,4 @@
+
 // Comandos de compilado
 //		cd Escritorio
 // 		gcc Obligatorio_01.c -o Obligatorio_01.out
@@ -8,8 +9,8 @@
 // 		El programa dse diviode en dos partes acada una sera ejecutada 
 // o bien por un hilo o por un proceso.Estas partes seran sincronisadas
 // por una variable en moemoria compartida o global q se encarga de 
-// coordinar el trabajo de cada parte (hilo/proceso). 
-//		Parte Cronometraje : dependindo de la variable trabajo ara una 
+// coordinar el *trabajo de cada parte (hilo/proceso). 
+//		Parte Cronometraje : dependindo de la variable *trabajo ara una 
 // funcion o  otra.
 //		Parte Interfas: El esperara al usuario en funcion de su nesesidad 
 // cambiara la var global
@@ -24,16 +25,12 @@
 		#include <string.h>
 	// Para reloj
 		#include <unistd.h>
-	// Para Procesos
-	/*	#include <sys/shm.h>
-		#include <sys/types.h>
-		#include <sys/ipc.h>
-	*/
-	// Parra Hilos
-		#include <pthread.h>
+	
+#define TAM 1024
 
 // Declara
 //Estructuras
+
 	typedef struct ListaIdentificar {
 		struct nodoLista * ini;
 		struct nodoLista * fin;
@@ -52,7 +49,7 @@
 	Lista * Reloj;
 	Lista * Marcas;
 	char * dir[2] = {"MyReloj.txt","MyMarcas.txt"};
-	int trabajo = 0;
+	int * trabajo = NULL;
 
 // head
 	void gotoxy (int x, int y);
@@ -68,7 +65,7 @@
 	void NuevoReloj();
 	void ListaReloj(int pos);
 	void VaciarLista(Lista *lista);
-	void SolicitaDato(char * imp);
+	void SolicitaDato(int interuptor);
 	void AniadirMarca(int index);
 	void EliminarMarca(int index);
 	void EjecutaOpciones(int opcion,char * name,int index);
@@ -95,6 +92,31 @@ void gotoxy (int x, int y) {
 	fflush(stdout);
 	printf("\033[%d;%df", x, y);
 }
+void PantallaDespedida(){
+	system("clear");
+	gotoxy(2,0);
+	printf(" ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n");
+	printf(" ┃                                                                             ┃\n");
+	printf(" ┃                                                                             ┃\n");
+	printf(" ┃                                                                             ┃\n");
+	printf(" ┃                                                                             ┃\n");
+	printf(" ┃                                                                             ┃\n");
+	printf(" ┃                                                                             ┃\n");
+	printf(" ┃                                                                             ┃\n");
+	printf(" ┃                                                                             ┃\n");
+	printf(" ┃                            ━━━   L I S T O   ━━━                            ┃\n");
+	printf(" ┃                                                                             ┃\n");
+	printf(" ┃                                                                             ┃\n");
+	printf(" ┃                                                                             ┃\n");
+	printf(" ┃                                                                             ┃\n");
+	printf(" ┃                                                                             ┃\n");
+	printf(" ┃                                                                             ┃\n");
+	printf(" ┃                                                                             ┃\n");
+	printf(" ┃                                                                             ┃\n");
+	printf(" ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n");
+	fflush(stdin);
+	getchar();	
+}
 void AniadirFichero(char * dir, char * name, int time){
 	FILE * Ficheros;
 	int tamano;
@@ -118,17 +140,15 @@ void ActualisarFichero(char * dir, char * name, char * rename, int d, int todo) 
 	fscanf (pFile, "%d", &tamano);
 	for (i = 0; i < tamano; ++i){
 		fgetpos(pFile, &posChar);
-
 		fscanf(pFile, "%s", Nombre);
 		fgetpos(pFile, &posFin);
-
 		fscanf(pFile, "%d", &Tiempo);
 		fgetpos(pFile, &posNum);
 
 		if (strcmp(name,Nombre) == 0){
 			fsetpos(pFile, &posChar);
 			if (rename != NULL){
-				fprintf(pFile, "\n%-50.50s %-8.8d",rename,d);
+				fprintf(pFile, "\n%-50.50s %-8.8d",rename,Tiempo);
 			}else {
 				if (d==-1){
 					tamano--;
@@ -137,7 +157,7 @@ void ActualisarFichero(char * dir, char * name, char * rename, int d, int todo) 
 					fprintf(pFile, "\n%-50.50s %-8.8d",name,d);
 				}
 			}
-			if (todo = 0)
+			if (todo == 0)
 				return;
 		}
 	}
@@ -152,14 +172,21 @@ void CargarFichero(Lista *lista, char * dir){
 
 	FILE * pFile;
 	pFile = fopen (dir,"r");
-	fscanf (pFile, "%d", &tamano);
-	for (i = 0; i < tamano; ++i){
-		fscanf (pFile, "%s", Nombre);
-		fscanf (pFile, "%d", &Tiempo);
-		printf("%-50.50s %-8.8d\n",Nombre,Tiempo);
-		InsertarNodo(lista, Nombre,Tiempo,0);
+	if (pFile!=NULL){
+		fscanf (pFile, "%d", &tamano);
+		for (i = 0; i < tamano; ++i){
+			fscanf (pFile, "%s", Nombre);
+			fscanf (pFile, "%d", &Tiempo);
+			InsertarNodo(lista, Nombre,Tiempo,0);
+		}
+		fclose (pFile);
+	}else{
+		pFile = fopen (dir,"w");
+		fprintf(pFile, "0\n");
+		fclose (pFile);
+		CargarFichero(lista,dir);
 	}
-	fclose (pFile);
+
 }
 void GuardarFichero(Lista *lista, char * dir) {
 	FILE * pFile;
@@ -250,17 +277,17 @@ void InsertarNodo(Lista *lista, char * dat, int tim, int sta){
 void OpcionesInicio(int pos){
 	gotoxy(0,0);
 	if(pos==-1){
-		printf("┏━━━━━━━━━━━━━━━━━━━━━━━━━┯━━━━━━━━━━━━━━━━━━━━━━━━━┯━━━━━━━━━━━━━━━━━━━━━━━━━┓\n");
-		printf("┃    Seleccionar reloj    │       Nuevo reloj       │          Salir          ┃\n");
-		printf("┃ ─────────────────────────────────────────────────────────────────────────── ┃\n");
-		printf("┃            1            │            2            │            3            ┃\n");
-		printf("┗━━━━━━━━━━━━━━━━━━━━━━━━━┷━━━━━━━━━━━━━━━━━━━━━━━━━┷━━━━━━━━━━━━━━━━━━━━━━━━━┛\n");
+		printf(" ┏━━━━━━━━━━━━━━━━━━━━━━━━━┯━━━━━━━━━━━━━━━━━━━━━━━━━┯━━━━━━━━━━━━━━━━━━━━━━━━━┓\n");
+		printf(" ┃       Nuevo reloj       │    Seleccionar reloj    │          Salir          ┃\n");
+		printf(" ┃ ─────────────────────────────────────────────────────────────────────────── ┃\n");
+		printf(" ┃            1            │            2            │            3            ┃\n");
+		printf(" ┗━━━━━━━━━━━━━━━━━━━━━━━━━┷━━━━━━━━━━━━━━━━━━━━━━━━━┷━━━━━━━━━━━━━━━━━━━━━━━━━┛\n");
 	}else{
-		printf("┏━━━━━━━━━━━━━━━━━━━━━━┯━━━━━━━━━━━━━━━━━┯━━━━━━━━━━━━━━━━━┯━━━━━━━━━━━━━━━━━━┓\n");
-		printf("┃  Seleccionar reloj   │   Nuevo reloj   │      Salir      │   Aniadir marca   ┃\n");
-		printf("┃ ─────────────────────────────────────────────────────────────────────────── ┃\n");
-		printf("┃           1          │        2        │        3        │        4         ┃\n");
-		printf("┗━━━━━━━━━━━━━━━━━━━━━━┷━━━━━━━━━━━━━━━━━┷━━━━━━━━━━━━━━━━━┷━━━━━━━━━━━━━━━━━━┛\n");
+		printf(" ┏━━━━━━━━━━━━━━━━━┯━━━━━━━━━━━━━━━━━━━━━━┯━━━━━━━━━━━━━━━━━┯━━━━━━━━━━━━━━━━━━┓\n");
+		printf(" ┃   Nuevo reloj   │  Seleccionar reloj   │      Salir      │   Aniadir marca  ┃\n");
+		printf(" ┃ ─────────────────────────────────────────────────────────────────────────── ┃\n");
+		printf(" ┃        1        │           2          │        3        │        4         ┃\n");
+		printf(" ┗━━━━━━━━━━━━━━━━━┷━━━━━━━━━━━━━━━━━━━━━━┷━━━━━━━━━━━━━━━━━┷━━━━━━━━━━━━━━━━━━┛\n");
 	}
 }
 void NuevoReloj(){
@@ -268,40 +295,50 @@ void NuevoReloj(){
 	char Nombre[50];
 	int  Tiempo = -1;
 	gotoxy(2,0);
-	printf("┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n");
-	printf("┃                                 Nuevo reloj                                 ┃\n");
-	printf("┃ ─────────────────────────────────────────────────────────────────────────── ┃\n");
-	printf("┃                                                                             ┃\n");
-	printf("┃   Nombre del reloj    ___________________________________________________   ┃\n");
-	printf("┃                                                                             ┃\n");
-	printf("┃   Tiempo en segundos  ___________________________________________________   ┃\n");
-	printf("┃                                                                             ┃\n");
-	printf("┃                                                                             ┃\n");
-	printf("┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n");
+	printf(" ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n");
+	printf(" ┃                                 Nuevo reloj                                 ┃\n");
+	printf(" ┃ ─────────────────────────────────────────────────────────────────────────── ┃\n");
+	printf(" ┃                                                                             ┃\n");
+	printf(" ┃   Nombre del reloj    ___________________________________________________   ┃\n");
+	printf(" ┃                                                                             ┃\n");
+	printf(" ┃   Tiempo en segundos  ___________________________________________________   ┃\n");
+	printf(" ┃                                                                             ┃\n");
+	printf(" ┃                                                                             ┃\n");
+	printf(" ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n");
 	gotoxy(6,25);
 	scanf("%sd",Nombre);
 	gotoxy(8,25);
 	scanf("%d",&Tiempo);
-	ActualisarFichero(dir[0],Nombre,NULL,Tiempo,-1);
+	AniadirFichero(dir[0],Nombre,Tiempo);
 }
 void ListaReloj(int pos){
 	gotoxy(pos,0);
 	Nodo *aux = Reloj->ini;
-	printf("┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n");
-	printf("┃                                 Mi relojes                                  ┃\n");
-	printf("┃ ─────────────────────────────────────────────────────────────────────────── ┃\n");
-	while(aux != NULL){
-		printf("┃  %-50.50s",aux->dat);
-		ImprimeHora(aux->tim,aux->sta);
-		gotoxy(pos,79);
-		printf("┃\n");
-		pos++;
-		aux = aux->sig;
+	printf(" ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n");
+	printf(" ┃                                 Mi relojes                                  ┃\n");
+	printf(" ┃ ─────────────────────────────────────────────────────────────────────────── ┃\n");
+	pos+=3;
+	if (Reloj->tam > 0 ){
+		while(aux != NULL){
+			printf(" ┃  %-50.50s",aux->dat);
+			ImprimeHora(aux->tim,aux->sta);
+			gotoxy(pos,79);
+			printf(" ┃\n");
+			pos++;
+			aux = aux->sig;
+		}
+	}else{
+		printf(" ┃                                                                             ┃\n");
+		printf(" ┃                               No hay elementos                              ┃\n");
+		printf(" ┃                                                                             ┃\n");
+
 	}
-	printf("┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n");
+	printf(" ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n");
+
+
 };
 int ListaMarcas(){
-	int Input = 1,pos = 2, index = 3;
+	int Input = 1,pos = 2, index = 2;
 	int Tiempo = 0, tamano = 0, i;
 	char Nombre[50];
 	FILE * pFile;
@@ -309,13 +346,13 @@ int ListaMarcas(){
 		system("clear");
 		pos = 2;
 		gotoxy(pos,0);
-		printf("┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n");
+		printf(" ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n");
 		if(Input==1)
-			printf("┃                               Menu seleccionar                              ┃\n");
+			printf(" ┃                               Menu seleccionar                              ┃\n");
 		else
-			printf("┃                                Fuera de rango                               ┃\n");
-		printf("┃ ─────────────────────────────────────────────────────────────────────────── ┃\n");
-		printf("┃                                                                             ┃\n");
+			printf(" ┃                                Fuera de rango                               ┃\n");
+		printf(" ┃ ─────────────────────────────────────────────────────────────────────────── ┃\n");
+		printf(" ┃                                                                             ┃\n");
 		pos = 6;
 		pFile = fopen (dir[1],"r");
 		fscanf (pFile, "%d", &tamano);
@@ -323,22 +360,23 @@ int ListaMarcas(){
 			index++;
 			fscanf (pFile, "%s", Nombre);
 			fscanf (pFile, "%d", &Tiempo);
-			printf("┃       %d %-50.50s", index, Nombre);
-			ImprimeHora(Tiempo,-1);
+			printf(" ┃  %8d %-50.50s", index, Nombre);
 			gotoxy(pos,79);
-			printf("┃\n");
+			printf(" ┃\n");
 			pos++;
 
 		}
 		fclose (pFile);
-		printf("┃                                                                             ┃\n");
-		printf("┃        1-Salir           2-Aniadir Marcar         n-Eliminar Marcas n        ┃\n");
-		printf("┃                                                                             ┃\n");
-		printf("┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n");
-		pos++;
-		gotoxy(pos,35);
+		printf(" ┃                                                                             ┃\n");
+		printf(" ┃        1-Salir           2-Aniadir Marcar         n-Eliminar Marcas n       ┃\n");
+		printf(" ┃                                                                             ┃\n");
+		printf(" ┃                                                                             ┃\n");
+		printf(" ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n");
+		printf("                          Seleccion ________\n");
+		pos+=3;
+		gotoxy(pos,37);
 		scanf("%d",&Input);
-	}while((trabajo != 4 || trabajo != 1) && (Input < 0 || Input > tamano+3));
+	}while((*trabajo != 4 || *trabajo != 1) && (Input < 0 || Input > tamano+3));
 	return Input;
 };
 
@@ -361,29 +399,29 @@ int OpcioneReloj(){
 	do{
 		system("clear");
 		gotoxy(2,0);
-		printf("┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n");
+		printf(" ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n");
 		if(Input == 1){
-		printf("┃                                  Opciones                                   ┃\n");
+		printf(" ┃                                  Opciones                                   ┃\n");
 		}else{
-		printf("┃                               Fuera de rango                                ┃\n");
+		printf(" ┃                               Fuera de rango                                ┃\n");
 		}
-		printf("┃ ─────────────────────────────────────────────────────────────────────────── ┃\n");
-		printf("┃                                                                             ┃\n");
-		printf("┃   1 Cambair Tiempo                                                          ┃\n");
-		printf("┃   2 Renombrer reloj                                                         ┃\n");
-		printf("┃   3 Resetear reloj                                                          ┃\n");
-		printf("┃   4 Eliminar reloj                                                          ┃\n");
-		printf("┃   5 Pausar/Reanudar reloj                                                   ┃\n");
-		printf("┃   6 Aniadior marcas                                                          ┃\n");
-		printf("┃   7 Eliminar marcas                                                         ┃\n");
-		printf("┃   8 Mostrar marcas                                                          ┃\n");
-		printf("┃                                                                             ┃\n");
-		printf("┃   Opcion:  ______________________________________________________________   ┃\n");
-		printf("┃                                                                             ┃\n");
-		printf("┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n");
-		gotoxy(14,14);
+		printf(" ┃ ─────────────────────────────────────────────────────────────────────────── ┃\n");
+		printf(" ┃                                                                             ┃\n");
+		printf(" ┃   1 Cambair Tiempo                                                          ┃\n");
+		printf(" ┃   2 Renombrer reloj                                                         ┃\n");
+		printf(" ┃   3 Resetear reloj                                                          ┃\n");
+		printf(" ┃   4 Eliminar reloj                                                          ┃\n");
+		printf(" ┃   5 Pausar/Reanudar reloj                                                   ┃\n");
+		printf(" ┃   6 Aniadior marcas                                                         ┃\n");
+		printf(" ┃   7 Eliminar marcas                                                         ┃\n");
+		printf(" ┃   8 Mostrar marcas                                                          ┃\n");
+		printf(" ┃                                                                             ┃\n");
+		printf(" ┃   Opcion:  ______________________________________________________________   ┃\n");
+		printf(" ┃                                                                             ┃\n");
+		printf(" ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n");
+		gotoxy(15,14);
 		scanf("%d",&Input);
-	}while((trabajo != 4 || trabajo != 1) && (Input < 0 || Input > 9));
+	}while((*trabajo != 4 || *trabajo != 1) && (Input < 0 || Input > 9));
 	return Input;
 }
 int SeleccionReloj(char * dir){
@@ -395,44 +433,58 @@ int SeleccionReloj(char * dir){
 		system("clear");
 		pos = 2, index = 0;
 		gotoxy(pos,0);
-		printf("┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n");
+		printf(" ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n");
 		if (Input==1)
-			printf("┃                               Menu seleccionar                              ┃\n");
+			printf(" ┃                               Menu seleccionar                              ┃\n");
 		else
-			printf("┃                                Fuera de rango                               ┃\n");
-		printf("┃ ─────────────────────────────────────────────────────────────────────────── ┃\n");
-		printf("┃                                                                             ┃\n");
+			printf(" ┃                                Fuera de rango                               ┃\n");
+		printf(" ┃ ─────────────────────────────────────────────────────────────────────────── ┃\n");
+		printf(" ┃                                                                             ┃\n");
 		pos = 6;
 		pFile = fopen (dir,"r");
 		fscanf (pFile, "%d", &tamano);
-		for (i = 0; i < tamano; ++i){
-			fscanf (pFile, "%s", Nombre);
-			fscanf (pFile, "%d", &Tiempo);
-			printf("┃      %d %-50.50s", index, Nombre);
-			ImprimeHora(Tiempo,-1);
-			gotoxy(pos,79);
-			printf("┃\n");
-			pos++;
-			index++;
-
+		if (tamano>0){
+			for (i = 0; i < tamano; ++i){
+				fscanf (pFile, "%s", Nombre);
+				fscanf (pFile, "%d", &Tiempo);
+				printf(" ┃      %d %-50.50s", index, Nombre);
+				gotoxy(pos,79);
+				printf(" ┃\n");
+				pos++;
+				index++;
+			}
+		}else{
+			printf(" ┃                                                                             ┃\n");
+			printf(" ┃                               No hay elementos                              ┃\n");
+			printf(" ┃                                                                             ┃\n");
 		}
 		fclose (pFile);
-		printf("┃                                                                             ┃\n");
-		printf("┃   Que reloj quieres selecionar  _________________________________________   ┃\n");
-		printf("┃                                                                             ┃\n");
-		printf("┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n");
+		printf(" ┃                                                                             ┃\n");
+		printf(" ┃   Que reloj quieres selecionar  _________________________________________   ┃\n");
+		printf(" ┃                                                                             ┃\n");
+		printf(" ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n");
 		pos++;
 		gotoxy(pos,35);
 		scanf("%d",&Input);
-	}while((trabajo != 4 || trabajo != 1) && (Input < 0 || Input > tamano+1));
+	}while((*trabajo != 4 || *trabajo != 1) && (Input < 0 || Input > tamano+1));
 	return Input;
 }
-void SolicitaDato(char * imp){
-	printf("┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n");
-	printf("┃                                Modificacion                                 ┃\n");
-	printf("┃ ─────────────────────────────────────────────────────────────────────────── ┃\n");
-	printf("%s\n", imp);
-	printf("┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n");
+void SolicitaDato(int interuptor){
+	system("clear");
+	int poscursor = 0;
+	gotoxy(2,0);
+	printf(" ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n");
+	printf(" ┃                                Modificacion                                 ┃\n");
+	printf(" ┃ ─────────────────────────────────────────────────────────────────────────── ┃\n");
+	if(interuptor = 0){
+		printf(" ┃  Nuevo tiempo (segundos)  ________                                          ┃\n");
+		poscursor = 29;
+	}else{
+		printf(" ┃  Nuevo Nombre   __________________________________________________          ┃\n");
+		poscursor = 19;
+	}
+	printf(" ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n");
+	gotoxy(5,poscursor);
 }
 void AniadirMarca(int index){
 	char auxchar[50];
@@ -473,12 +525,12 @@ void EjecutaOpciones(int opcion,char * name,int index){
 
 	switch(opcion){
 		case 1: // Cambair   Tiempo
-			SolicitaDato("┃  Nuevo tiempo (segundos)  ________                                             ┃");
+			SolicitaDato(0);
 			scanf("%d", &newtime);
 			ActualisarFichero(dir[0],name, NULL, newtime,-1);
 		break;
 		case 2: // Renombrer reloj 
-			SolicitaDato("┃  Nuevo Nombre (50 Maximo)  __________________________________________________  ┃");
+			SolicitaDato(1);
 			scanf("%s", rename);
 			ActualisarFichero(dir[0],name, rename, -1,-1);
 			ActualisarFichero(dir[1],name, rename, -1,-1);
@@ -492,7 +544,7 @@ void EjecutaOpciones(int opcion,char * name,int index){
 			ActualisarFichero(dir[1],name, NULL, -1,-1);
 		break;
 		case 5: // Pausar    reloj 
-			trabajo = (index*100) + 5; 
+			*trabajo = (index*100) + 5; 
 		break;
 		case 6: // Aniadior   marcas
 			AniadirMarca(index);
@@ -532,6 +584,7 @@ void ImprimeHora(int hora,int stado){
 	printf(":");
 	printf("%d",S/10);
 	printf("%d",S%10);
+	printf("-> %d",stado);
 	if (stado == 1)
 		printf(" | Parado");
 	else if (stado == 0)
@@ -547,13 +600,11 @@ void SumaReloj(){
 };
 void Pausar(int index){
 	Nodo *aux = Reloj->ini;
-	for (int i = 0; i <= index; ++i){
+	while(aux != NULL && index > 0){
+		index--;
 		aux = aux->sig;
 	}
-	if (aux->sta == 0)
-		aux->sta = 1;
-	else
-		aux->sta = 0;
+	aux->sta = 1;
 }
 void PantallaError();
 void PantallaExito();
@@ -566,10 +617,13 @@ void PantallaDespedida();
 
 //Funciones Principales
 	void * Cronometrar(){
-		int postCursor;
-		while(trabajo!=4){
+		int postCursor,ciclos,index;
+		while(*trabajo!=4){
+			ciclos++;
 			postCursor=0;
-			switch(trabajo%100){
+			if (ciclos == 10)
+				GuardarFichero(Reloj, dir[0]);
+			switch(*trabajo%100){
 				case 1: // Correr y muestra reloj
 					SumaReloj();
 					ListaReloj(8);
@@ -582,35 +636,36 @@ void PantallaDespedida();
 					VaciarLista(Marcas);
 					CargarFichero(Reloj, dir[0]);
 					CargarFichero(Marcas, dir[1]);
-					trabajo = 3;
+					*trabajo = 1;
 				break;
 				case 5: // Correr reloj
-					Pausar(trabajo/100);
+					index = *trabajo/100;
+					Pausar(index);
+					*trabajo = 1;
 				break;
 			}
 			sleep(1);
 		}
 		GuardarFichero(Reloj, dir[0]);
-		GuardarFichero(Marcas, dir[1]);
+		PantallaDespedida();
 	}
 	void * Interfas(){
 		FILE * pFile;
 		char Nombre[50];
 		int Eleccion,aux,Tiempo,index = -1,postCursor=0,tamano;
-		while(trabajo!=4){
+		while(*trabajo!=4){
 			system("clear");
 			OpcionesInicio(index);
 			scanf("%d",&Eleccion);
 			switch(Eleccion){
 				case 1:	// Nuevo reloj
-					trabajo=2;
+					*trabajo=2;
 					NuevoReloj();
-					trabajo=3;
+					*trabajo=3;
 				break;
 				case 2: // Seleccion 
-					trabajo=2;
+					*trabajo=2;
 					index = SeleccionReloj(dir[0]);
-
 					pFile = fopen (dir[0],"r+");
 					fscanf (pFile, "%d", &tamano);
 					for (int i = 0; i <= index; ++i){
@@ -618,25 +673,29 @@ void PantallaDespedida();
 						fscanf (pFile, "%d", &Tiempo);
 					}
 					aux = OpcioneReloj();
+					if (aux == 4)
+						index = -1;
 					EjecutaOpciones(aux,Nombre,index);
 
-					trabajo=3;
+					*trabajo=3;
 				break;
 				case 3: // Salir
-					trabajo=4;
+					*trabajo=4;
 				break;
 				case 4: // Salir
 					if(index !=-1){
-						trabajo=2;
+						*trabajo=2;
 						AniadirMarca(index);
-						trabajo=1;
+						*trabajo=1;
 					}
 				break;
 			}
 		}
 	}
 
-
+/*
+// Parra Hilos
+	#include <pthread.h>
 //Funcion main
 void main()
 {
@@ -650,14 +709,68 @@ void main()
 	Marcas->fin = NULL;
 	Marcas->tam = 0;
 
+    trabajo = (int *)malloc(sizeof(int));
 	system("clear");
-	trabajo=1;
+	*trabajo=1;
+
 	CargarFichero(Reloj,dir[0]);
 	CargarFichero(Marcas,dir[1]);
-	pthread_t th1, th2; 
-	pthread_create(&th1, NULL, Interfas, NULL);
-	sleep(1);
-	pthread_create(&th2, NULL, Cronometrar, NULL);
-	pthread_join(th1,NULL);
+	pthread_t th1, th2; // Inizialiso
+	pthread_create(&th1, NULL, Interfas, NULL);// Corro
+	sleep(1);// Conflicto de lecturas y escrituras
+	pthread_create(&th2, NULL, Cronometrar, NULL);// Corro
+	pthread_join(th1,NULL); //esṕera hilo para finalisar
+	pthread_join(th2,NULL);
 
+}
+
+
+ 
+ 
+*/ 
+// Para Procesos
+	#include <sys/shm.h>
+	#include <sys/types.h>
+	#include <sys/ipc.h>
+//Funcion main
+void main(){
+    int pid,memoriaID;
+    
+    memoriaID = shmget(1315511,TAM,0664|IPC_CREAT);
+    
+ 
+	Reloj = (Lista *) malloc (sizeof (Lista));
+	Reloj->ini = NULL;
+	Reloj->fin = NULL;
+	Reloj->tam = 0;
+
+	Marcas = (Lista *) malloc (sizeof (Lista));
+	Marcas->ini = NULL;
+	Marcas->fin = NULL;
+	Marcas->tam = 0;
+	system("clear");
+
+
+	  
+    pid = fork();
+    switch(pid) {
+        case -1:
+            fprintf(stderr,"Error al hacer el fork");
+        break;
+        case 0: //El hijo
+            trabajo = shmat(memoriaID,(void *)0,0); //Asociacion
+            CargarFichero(Reloj,dir[0]);
+            *trabajo = 1;
+            Cronometrar();
+        break;
+        default:
+            trabajo = shmat(memoriaID,NULL,0); //Asociacion
+            Interfas();
+            
+            shmdt(&trabajo); //Desasociacion
+            if(shmctl(memoriaID,IPC_RMID,NULL)==-1){
+                fprintf(stderr,"Error al liberar la memoria");
+            }
+        break;
+    }
 }
