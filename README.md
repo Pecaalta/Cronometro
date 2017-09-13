@@ -21,14 +21,14 @@ Inicialiso variavles
 -  Cronometraje
 	- recorrera lista y sumara uno a cada estado 1
 	- Minreas trabajo no sea 4 
-			si 1 
+		-1 
 			- IMPRIME OPCIONES DE INICIO
 			- Imprimo en el recorido
-			si 2
-				Nada
-			si 3
+		-2
+			-Nada
+		-3
 			- Actualiso listas
-			si 4
+		-4
 			- Guardara el estado actual de las listas 
 			- Finalzra del while
 -  Interfase
@@ -72,30 +72,30 @@ Inicialiso variavles
 				- Salir
 			- cambia trabajo a 3
 		- Salir
-				Trabajo 4
+			-Trabajo 4
 
 ## Funciones
 ### Ficheros
-	Actualisar ficheros
-	Eliminar fichero
-	Cargar fichero
+	-Actualisar ficheros
+	-Eliminar fichero
+	-Cargar fichero
 ### Listas
-- Cargar de fichero 
-- Guardar en fichero
-- Eliminar de fichero
+	- Cargar de fichero 
+	- Guardar en fichero
+	- Eliminar de fichero
 ### Imprecion
-- Reloj
-- opciones inicio
-- Nuevo reloj
-- Lista de relojes
-- Opciones de reloj
-- Seleccionde  reloj
-- Cambiar nombre de reloj
-- cambiar timpo del reloj
-- Lista de marcas
-- opciones de marcas
-- eliminar Solicita pos de marca
-- Pantalla error
-- Pantalla exito
-- Pantalla binbenida 
-- Pantalla DESPEDIDA
+	- Reloj
+	- opciones inicio
+	- Nuevo reloj
+	- Lista de relojes
+	- Opciones de reloj
+	- Seleccionde  reloj
+	- Cambiar nombre de reloj
+	- cambiar timpo del reloj
+	- Lista de marcas
+	- opciones de marcas
+	- eliminar Solicita pos de marca
+	- Pantalla error
+	- Pantalla exito
+	- Pantalla binbenida 
+	- Pantalla DESPEDIDA
